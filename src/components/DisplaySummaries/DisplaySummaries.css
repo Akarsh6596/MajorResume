@@ -1,0 +1,93 @@
+/* 🌟 Main Container */
+.displaysummaries-container {
+  max-width: 95%;
+  margin: 40px auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 3px 3px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* 📌 Heading */
+.displaysummaries-container h2 {
+  font-size: 22px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* 📌 Table Styling */
+.displaysummaries-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 📌 Table Header */
+.displaysummaries-table th {
+  background-color: #3498db;
+  color: white;
+  font-weight: bold;
+  padding: 12px;
+  text-align: center;
+}
+
+/* 📌 Column Width Adjustments */
+.displaysummaries-table th:nth-child(1),
+.displaysummaries-table td:nth-child(1) {
+  width: 7%; /* Name - Reduced */
+}
+
+.displaysummaries-table th:nth-child(2),
+.displaysummaries-table td:nth-child(2) {
+  width: 20%; /* Job Description */
+}
+
+.displaysummaries-table th:nth-child(3),
+.displaysummaries-table td:nth-child(3) {
+  width: 18%; /* BART Summary */
+}
+
+.displaysummaries-table th:nth-child(4),
+.displaysummaries-table td:nth-child(4) {
+  width: 18%; /* BERT Summary */
+}
+
+.displaysummaries-table th:nth-child(5),
+.displaysummaries-table td:nth-child(5) {
+  width: 37%; /* Actual Text - Increased */
+}
+
+/* 📌 Table Cells */
+.displaysummaries-table td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+  font-size: 14px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* 📌 Alternate Row Background */
+.displaysummaries-table tbody tr:nth-child(even) {
+  background-color: #f8f8f8;
+}
+
+/* 📌 Hover Effect */
+.displaysummaries-table tbody tr:hover {
+  background-color: #d6eaf8;
+  transition: 0.3s ease-in-out;
+}
+
+/* 📌 Responsive Table */
+@media (max-width: 768px) {
+  .displaysummaries-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

@@ -1,0 +1,30 @@
+/* @keyframes fadeBackground {
+  0% { opacity: 0.8; }
+  50% { opacity: 0.95; }
+  100% { opacity: 0.8; }
+}
+
+.outlet-container {
+  position: relative;
+  min-height: 100%;
+  width: 100%;
+ 
+  pointer-events: none;
+}
+
+.outlet-container::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("D:\MAJOR_PROJECT\my-app\public\background2.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: -1000;
+  opacity: 0.8; 
+  animation: fadeBackground 5s infinite alternate;
+} */
