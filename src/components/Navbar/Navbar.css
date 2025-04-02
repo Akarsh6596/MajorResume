@@ -62,7 +62,9 @@
 }
 
 .dropdown-menu li:hover {
-  /* background: rgba(255, 255, 255, 0.2); Highlight effect */
   background: red;
 }
-
+.navbar {
+  height: 50px; 
+  padding: 5px 20px; 
+}
