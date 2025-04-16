@@ -5,14 +5,16 @@ import sys
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS  
-from transformers import BartTokenizer, BartForConditionalGeneration, BertTokenizer
+from transformers import BartTokenizer, BartForConditionalGeneration
 import PyPDF2
 from summarizer import Summarizer
-
+from transformers import BertTokenizer, BertForMaskedLM
 from nltk.tokenize import sent_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+bert_model = Summarizer()
 
+# print(bert_model)
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
@@ -33,6 +35,27 @@ bart_model = BartForConditionalGeneration.from_pretrained(bart_model_name)
 # ✅ Load BERT Model (for Extractive Summarization)
 # bert_model_name = "bert-base-uncased"  
 # bert_tokenizer = BertTokenizer.from_pretrained(bert_model_name)
+import re
+
+def clean_text(text):
+    # Collapse multiple whitespaces/newlines
+    text = ' '.join(text.split())
+
+    # Convert bullet points and dashes to periods
+    text = text.replace('•', '. ').replace('-', '. ').replace('–', '. ')
+
+    # Add period after common sections to break them properly
+    keywords = ['PROJECTS', 'SKILLS', 'EDUCATION', 'CERTIFICATES', 'TECHNICAL SKILLS', 'EXPERIENCE', 'STRENGTHS']
+    for kw in keywords:
+        text = text.replace(kw, f". {kw}")
+
+    # Add period before capital letters that follow lowercase words (naive sentence ender)
+    text = re.sub(r'(?<=[a-z])(?=[A-Z])', '. ', text)
+
+    # Remove non-ASCII chars
+    text = ''.join([c if ord(c) < 128 else ' ' for c in text])
+
+    return text
 
 
 
@@ -60,6 +83,7 @@ def split_text_into_sentences(text):
 
 # Step 3: BART Summarization (Abstractive)
 def summarize_text_bart(text, max_length=260, min_length=250):
+    text=clean_text(text)
     inputs = bart_tokenizer(
         [text], max_length=1024, return_tensors="pt", truncation=True
     )
@@ -75,28 +99,48 @@ def summarize_text_bart(text, max_length=260, min_length=250):
     return summary
 
 # Step 4: BERT Summarization (Extractive)
-bert_model = Summarizer()
+def test_summarizer():
+    sample_text = "BERT is a transformer-based model designed to understand the context of words in a sentence."
+    summary = bert_model(sample_text)
+    # print("Test Summary:", summary)
+
+test_summarizer()  # Run this to see if the model is functioning correctly
+
+
+
 def summarize_text_bert(text):
-    summary = bert_model(text, ratio=0.6,)  # Adjust ratio (e.g., 0.3 = 30% of the text)
-    return summary
-# def summarize_text_bert(text):
-#     sentences = split_text_into_sentences(text)
-#     if not sentences:
-#         return "Error: No text to summarize."
+    try:
+        # print("🔹 Raw text length:", len(text))
+        text = clean_text(text)
 
-#     inputs = bert_tokenizer(
-#         sentences, padding=True, truncation=True, return_tensors="pt"
-#     )
+        # Split into sentences and print a few to debug
+        sentences = sent_tokenize(text)
+        # print("🔹 Number of sentences detected:", len(sentences))
+        # print("🔹 First 3 sentences:", sentences[:3])
 
-#     with torch.no_grad():  # ✅ Disable gradient tracking for inference
-#         outputs = bert_model(**inputs)
+        # Rejoin cleaned sentences (ensure model gets clean input)
+        cleaned_text = " ".join(sentences[:50])  # Limit to first 50 sentences
 
-#     scores = outputs.logits.detach().numpy().flatten()
+        if len(cleaned_text) < 100:
+            raise ValueError("Text too short or malformed for summarization.")
+
+        summary = bert_model(cleaned_text, ratio=0.6)
+
+        if not summary or len(summary.strip()) < 10:
+            raise ValueError("BERT returned an empty or too short summary.")
+
+        # print(" BERT Summary:", summary[:200])
+        return summary
+
+    except Exception as e:
+        # print(f"❌ BERT summarization failed: {e}")
+        return "Error: BERT summarization failed or input too large."
+
+
     
-#     sorted_indices = scores.argsort()[::-1][:5]  # Top 5 sentences
-#     summary = " ".join([sentences[i] for i in sorted_indices])
+    # Here you can process the outputs to generate summaries (this is a basic example)
     
-#     return summary    
+
 
 # API for BART Summarization
 @app.route("/upload-pdf", methods=["POST"])
@@ -126,6 +170,7 @@ def upload_pdf_bert():
         return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["file"]
+    # print(file)
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
@@ -135,7 +180,9 @@ def upload_pdf_bert():
 
     try:
         extracted_text = extract_text_from_pdf(file_path)
+        # print(extracted_text)
         summary = summarize_text_bert(extracted_text)
+        # print("summary is",summary)
         return jsonify({"summary": summary})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -161,7 +208,8 @@ def rank_resume():
 
     try:
         extracted_text = extract_text_from_pdf(file_path)
-
+        # console.log(extracted_text)
+        # print(extracted_text)
         # Generate summaries
         bart_summary = summarize_text_bart(extracted_text)
         bert_summary = summarize_text_bert(extracted_text)
